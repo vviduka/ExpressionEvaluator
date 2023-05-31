@@ -1,17 +1,21 @@
 package org.expressionevaluator.dto;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import javax.validation.constraints.NotEmpty;
+import org.expressionevaluator.validator.json.JsonConstraint;
 
 @Data
 @AllArgsConstructor
 public class EvaluateExpressionRequestDTO {
 
-    @NotEmpty(message = "Expression ID cannot be empty or null.")
+    @NotNull(message = "Expression ID cannot be null.")
     private Long expressionId;
-    @NotEmpty(message = "JSON object cannot be empty or null.")
+
+    @NotEmpty(message = "JSON object cannot be empty")
+    @NotNull(message = "JSON object cannot be null.")
+    @JsonConstraint(message = "Not valid Json string.")
     private String jsonString;
 
 }

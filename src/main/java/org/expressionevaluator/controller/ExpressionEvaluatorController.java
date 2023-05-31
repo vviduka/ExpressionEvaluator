@@ -1,5 +1,6 @@
 package org.expressionevaluator.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.expressionevaluator.dto.APIResponse;
 import org.expressionevaluator.dto.EvaluateExpressionRequestDTO;
@@ -11,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")

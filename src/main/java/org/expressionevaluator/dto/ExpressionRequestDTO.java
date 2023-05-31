@@ -1,23 +1,22 @@
 package org.expressionevaluator.dto;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.expressionevaluator.validator.ExpressionConstraint;
+import org.expressionevaluator.validator.expression.ExpressionConstraint;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotEmpty;
+
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExpressionRequestDTO {
 
-    @NotEmpty(message = "Name of name cannot be empty.")
-    @Min(value = 3, message = "Name needs to have at least minimum 3 letters.")
+    @NotEmpty(message = "Name cannot be empty.")
     private String name;
 
-    @NotEmpty(message = "Name of expression cannot be empty.")
-    //@ExpressionConstraint
+    @NotEmpty(message = "Expression is required.")
+    @ExpressionConstraint(message = "Malformed expression.")
     private String expression;
 }

@@ -1,14 +1,12 @@
 package org.expressionevaluator.mapper;
 
-import org.expressionevaluator.dto.EvaluateExpressionRequestDTO;
+import jakarta.validation.constraints.NotNull;
 import org.expressionevaluator.dto.ExpressionDTO;
 import org.expressionevaluator.dto.ExpressionRequestDTO;
 import org.expressionevaluator.entity.Expression;
 import org.expressionevaluator.utility.tree.ExpressionTreeBuilder;
 import org.springframework.stereotype.Component;
 
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 @Component
 public class ExpressionMapper {
@@ -27,14 +25,6 @@ public class ExpressionMapper {
         return new Expression(expressionDTO.getId(),
                               expressionDTO.getName(),
                               expressionDTO.getExpression());
-    }
-
-    public List<ExpressionDTO> toExpressionDTO(List<Expression> expressions) {
-        return expressions.stream().map(this::toExpressionDTO).toList();
-    }
-
-    public List<Expression> toExpressionEntity(List<ExpressionDTO> expressions) {
-        return expressions.stream().map(this::toExpressionEntity).toList();
     }
 
     public ExpressionDTO expressionRequestDTOToExpressionDTO(ExpressionRequestDTO expressionRequestDTO) {

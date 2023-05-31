@@ -15,7 +15,6 @@ import java.util.Stack;
 @Component
 @RequiredArgsConstructor
 public class ExpressionResolver {
-
     private final ObjectMapper mapper;
 
     public boolean getResult(ExpressionDTO expressionDTO, String jsonInput) {
@@ -31,6 +30,44 @@ public class ExpressionResolver {
         return false;
     }
 
+    private boolean evaluateExpression(JsonNode jsonNode, Stack<TreeNode<ExpressionNode>> nodeStack) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<Boolean> leafResults = new ArrayList<>();
+        populateNodesResult(jsonNode, nodeStack, stringBuilder, leafResults);
+        TreeNode<ExpressionNode> root = nodeStack.peek();
+        if (root.getChildren() != null && !root.getChildren().isEmpty()) {
+            return resolveResult(extractChildrenNodeResults(root), root.getData().getOperator());
+        } else {
+            // Simple expression tree
+            collectLeavesResult(jsonNode, stringBuilder, leafResults, root.getData().getExpressionLeaves());
+            if (leafResults.size() == 1) {
+                return leafResults.get(0);
+            }
+            return resolveResult(leafResults, root.getData().getOperator());
+        }
+    }
+
+    private void populateNodesResult(JsonNode jsonNode, Stack<TreeNode<ExpressionNode>> nodeStack, StringBuilder stringBuilder, List<Boolean> leafResults) {
+        while (!nodeStack.empty() && !nodeStack.peek().isRoot()) {
+            TreeNode<ExpressionNode> node = nodeStack.pop();
+            if (node.getData().getExpressionLeaves().isEmpty()) {
+                //Nodes which consist of 2 nested expressions
+                leafResults.addAll(extractChildrenNodeResults(node));
+            } else {
+                //Main logic for accessing json routes and collecting their result
+                collectLeavesResult(jsonNode, stringBuilder, leafResults, node.getData().getExpressionLeaves());
+            }
+            if (leafResults.size() == 1) {
+                //For simple tree expression where we dont have nested nodes
+                leafResults.add(node.getChildren().get(0).getData().getResult());
+            }
+            // Set result for current node
+            node.getData().setResult(resolveResult(leafResults, node.getData().getOperator()));
+            leafResults.clear();
+        }
+    }
+
+    //Populate stack so we can use Recursive decent algorithm
     private void populateStack(Stack<TreeNode<ExpressionNode>> nodeStack, TreeNode<ExpressionNode> node) {
         TreeNodeIterator<ExpressionNode> treeNodeIterator = new TreeNodeIterator<>(node);
         while (treeNodeIterator.hasNext()) {
@@ -38,38 +75,7 @@ public class ExpressionResolver {
         }
     }
 
-    private boolean evaluateExpression(JsonNode jsonNode, Stack<TreeNode<ExpressionNode>> nodeStack) {
-        StringBuilder stringBuilder = new StringBuilder();
-        List<Boolean> leafResults = new ArrayList<>();
-        while (!nodeStack.empty() && !nodeStack.peek().isRoot()) {
-            TreeNode<ExpressionNode> node = nodeStack.pop();
-            List<ExpressionLeaf> expressionLeaves = node.getData().getExpressionLeaves();
-            if (expressionLeaves.isEmpty()) {
-                leafResults.addAll(extractChildrenNodeResults(node));
-            } else {
-                collectLeavesResult(jsonNode, stringBuilder, leafResults, expressionLeaves);
-            }
-            if (leafResults.size() == 1) {
-                leafResults.add(node.getChildren().get(0).getData().getResult());
-            }
-            boolean nodeResult = resolveResult(leafResults, node.getData().getOperator());
-            node.getData().setResult(nodeResult);
-            leafResults.clear();
-        }
-
-        TreeNode<ExpressionNode> root = nodeStack.peek();
-        if (root.getChildren() != null && !root.getChildren().isEmpty()) {
-            return resolveResult(extractChildrenNodeResults(root), root.getData().getOperator());
-        } else {
-            //Simple expression tree
-            collectLeavesResult(jsonNode, stringBuilder, leafResults, root.getData().getExpressionLeaves());
-            if(leafResults.size() == 1) {
-                return leafResults.get(0);
-            }
-            return resolveResult(leafResults, root.getData().getOperator());
-        }
-    }
-
+    //Evaluate expression on json input
     private void collectLeavesResult(JsonNode jsonNode, StringBuilder stringBuilder, List<Boolean> leafResults, List<ExpressionLeaf> expressionLeaves) {
         for (ExpressionLeaf leaf : expressionLeaves) {
             String jsonPointer = stringBuilder.append("/").append(leaf.getLhsExpression().replace(".", "/")).toString();
@@ -78,16 +84,17 @@ public class ExpressionResolver {
         }
     }
 
+    //Comparison of 2 leaves result
     private boolean resolveResult(List<Boolean> leafResults, ExpressionOperator operator) {
-        boolean result = false;
         if (operator == ExpressionOperator.AND) {
-            result = leafResults.stream().allMatch(Boolean::booleanValue);
+            return leafResults.stream().allMatch(Boolean::booleanValue);
         } else if (operator == ExpressionOperator.OR) {
-            result = leafResults.stream().anyMatch(Boolean::booleanValue);
+            return leafResults.stream().anyMatch(Boolean::booleanValue);
         }
-        return result;
+        return false;
     }
 
+    //Collect children node results
     private List<Boolean> extractChildrenNodeResults(TreeNode<ExpressionNode> root) {
         List<Boolean> results = new ArrayList<>();
         List<TreeNode<ExpressionNode>> rootChildren = root.getChildren();
@@ -102,21 +109,20 @@ public class ExpressionResolver {
             throw new IllegalArgumentException("Node that you are looking for is null or does not exist.");
         }
 
-        boolean result = false;
         if (value.isTextual()) {
             String textValue = value.asText();
-            result = compareText(textValue, operator, formatString(valueToBeCompared));
+            return compareText(textValue, operator, formatString(valueToBeCompared));
         } else if (value.isNumber()) {
             double numericValue = value.asDouble();
-            result = compareNumeric(numericValue, operator, valueToBeCompared);
+            return compareNumeric(numericValue, operator, valueToBeCompared);
         } else if (value.isBoolean()) {
             boolean booleanValue = value.asBoolean();
-            result = compareBoolean(booleanValue, operator, valueToBeCompared);
+            return compareBoolean(booleanValue, operator, valueToBeCompared);
         } else if (valueToBeCompared.equals("null")) {
-            result = compareNull(value, operator);
+            return compareNull(value, operator);
         }
 
-        return result;
+        return false;
     }
 
     private String formatString(String valueToBeCompared) {
