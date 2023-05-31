@@ -22,22 +22,14 @@ public class ExpressionTreeBuilder {
         rootNode.setDepthLevel(0);
         rootNode.setOperator(findRootOperator(tokens));
 
+        TreeNode<ExpressionNode> root = new TreeNode<>(rootNode);
+        stack.push(root);
+
         index = 0;
         depthLevel = 0;
 
-        TreeNode<ExpressionNode> root = new TreeNode<>(rootNode);
+        createChildren(tokens, stack);
 
-        if(expression.contains("(")) {
-           return createSimpleTree(root);
-        } else {
-            stack.push(root);
-            createChildren(tokens, stack);
-            return root;
-        }
-    }
-
-    private static TreeNode<ExpressionNode> createSimpleTree(TreeNode<ExpressionNode> root) {
-        root.getData().setExpressionLeaves(createExpressionLeaves(root.getData()));
         return root;
     }
 
@@ -123,11 +115,6 @@ public class ExpressionTreeBuilder {
     }
 
     private static boolean isLogicalOperator(String token) {
-        for (ExpressionOperator operator : ExpressionOperator.values()) {
-            if (operator.getSymbol().equals(token)) {
-                return true;
-            }
-        }
-        return false;
+        return token.equals(ExpressionOperator.AND.getSymbol()) || token.equals(ExpressionOperator.OR.getSymbol());
     }
 }
