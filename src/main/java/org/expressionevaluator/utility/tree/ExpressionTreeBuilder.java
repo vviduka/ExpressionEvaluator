@@ -4,9 +4,7 @@ import org.expressionevaluator.utility.ExpressionLeaf;
 import org.expressionevaluator.utility.ExpressionNode;
 import org.expressionevaluator.utility.ExpressionOperator;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class ExpressionTreeBuilder {
 
@@ -20,8 +18,12 @@ public class ExpressionTreeBuilder {
         ExpressionNode rootNode = new ExpressionNode();
         rootNode.setExpression(expression);
         rootNode.setDepthLevel(0);
-        rootNode.setOperator(findRootOperator(tokens));
 
+        if(!expression.contains("(")) {
+            return createSimpleTree(rootNode, tokens);
+        }
+
+        rootNode.setOperator(findRootOperator(tokens));
         TreeNode<ExpressionNode> root = new TreeNode<>(rootNode);
         stack.push(root);
 
@@ -33,22 +35,48 @@ public class ExpressionTreeBuilder {
         return root;
     }
 
+    private static TreeNode<ExpressionNode> createSimpleTree(ExpressionNode rootNode, List<String> tokens) {
+        rootNode.setOperator(findLogicalOperator(tokens));
+        rootNode.setExpressionLeaves(createExpressionLeaves(rootNode));
+        return new TreeNode<>(rootNode);
+    }
+
+    public static ExpressionOperator findLogicalOperator(List<String> tokens) {
+        return tokens.stream()
+                .filter(token -> token.equals(ExpressionOperator.AND.getSymbol()) || token.equals(ExpressionOperator.OR.getSymbol()))
+                .findFirst()
+                .map(ExpressionOperator::findBySymbol)
+                .orElseGet(() -> tokens.stream()
+                        .filter(ExpressionOperator::isLogicOperator)
+                        .map(ExpressionOperator::findBySymbol)
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("No operators found in the list of tokens.")));
+    }
+
     public static List<ExpressionLeaf> createExpressionLeaves(ExpressionNode expressionNode) {
         String expression = expressionNode.getExpression();
+        if(expression == null) {
+            throw new IllegalArgumentException("Expression cannot be null!");
+        }
+
         List<ExpressionLeaf> expressionLeafList = new ArrayList<>();
-        if(expression != null) {
-            String[] expressionLeaves = expression.trim().split(expressionNode.getOperator().getSplittingSymbol());
-            for (String leaf: expressionLeaves) {
-                //We know that there should be 3 tokens and 2nd token should be logical operator
-                if(!leaf.trim().isEmpty()) {
-                    List<String> tokens = ExpressionTokenizer.tokenizeExpression(leaf.trim());
-                    if(tokens.size() != 3){
-                        throw new IllegalArgumentException("Malformed logical expression!");
-                    }
-                    expressionLeafList.add(new ExpressionLeaf(tokens.get(0), tokens.get(2), ExpressionOperator.findBySymbol(tokens.get(1)), null));
-                }
+        List<String> expressionLeaves = Arrays.stream(expression.trim().split(expressionNode.getOperator().getSplittingSymbol()))
+                                              .filter(str -> !str.isEmpty())
+                                              .toList();
+
+
+        if((expressionNode.getOperator() != ExpressionOperator.AND) && (expressionNode.getOperator() != ExpressionOperator.OR)) {
+            expressionLeafList.add(new ExpressionLeaf(expressionLeaves.get(0).trim(), expressionLeaves.get(1).trim(), expressionNode.getOperator(), null));
+            return expressionLeafList;
+        }
+
+        for (String leaf: expressionLeaves) {
+            List<String> tokens = ExpressionTokenizer.tokenizeExpression(leaf.trim());
+            if(tokens.size() == 3) {
+                expressionLeafList.add(new ExpressionLeaf(tokens.get(0), tokens.get(2), ExpressionOperator.findBySymbol(tokens.get(1)), null));
             }
         }
+
         return expressionLeafList;
     }
 
@@ -63,7 +91,7 @@ public class ExpressionTreeBuilder {
                 return ExpressionOperator.findBySymbol(token);
             }
         }
-        //TODO: pogledati je li ovo dobro rijesenje
+
         throw new IllegalArgumentException("Operator not found!");
 
     }
@@ -90,13 +118,6 @@ public class ExpressionTreeBuilder {
                 index++;
             }
         }
-    }
-
-    private static ExpressionNode setExpressionNodeExpression(Stack<TreeNode<ExpressionNode>> stack) {
-        ExpressionNode childNode = stack.pop().getData();
-        childNode.setExpression(childNode.getExpression().trim());
-        childNode.setExpressionLeaves(createExpressionLeaves(childNode));
-        return childNode;
     }
 
     private static void setExpressionNodeOperator(Stack<TreeNode<ExpressionNode>> stack, String token) {

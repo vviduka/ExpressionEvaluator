@@ -25,6 +25,15 @@ public enum ExpressionOperator {
         };
 
     }
+
+    public static boolean isLogicOperator(String symbol) {
+        return switch (symbol) {
+            case ">", "<", "<=", ">=", "==", "!=", "&&", "||" -> true;
+            default -> false;
+        };
+    }
+
+
     private final int precedenceOrder;
     private final String symbol;
     private final String splittingSymbol;

@@ -23,7 +23,7 @@ public class Expression {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String expression;
 
 }

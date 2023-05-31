@@ -47,11 +47,7 @@ public class ExpressionResolver {
             if (expressionLeaves.isEmpty()) {
                 leafResults.addAll(extractChildrenNodeResults(node));
             } else {
-                for (ExpressionLeaf leaf : expressionLeaves) {
-                    String jsonPointer = stringBuilder.append("/").append(leaf.getLhsExpression().replace(".", "/")).toString();
-                    leafResults.add(determineTypeAndCompare(jsonNode.at(jsonPointer), leaf.getOperator(), leaf.getRhsExpression()));
-                    stringBuilder.setLength(0);
-                }
+                collectLeavesResult(jsonNode, stringBuilder, leafResults, expressionLeaves);
             }
             if (leafResults.size() == 1) {
                 leafResults.add(node.getChildren().get(0).getData().getResult());
@@ -61,14 +57,25 @@ public class ExpressionResolver {
             leafResults.clear();
         }
 
-        //TODO: Napraviti logiku za parsanje simpleTree-a
-
         TreeNode<ExpressionNode> root = nodeStack.peek();
         if (root.getChildren() != null && !root.getChildren().isEmpty()) {
             return resolveResult(extractChildrenNodeResults(root), root.getData().getOperator());
+        } else {
+            //Simple expression tree
+            collectLeavesResult(jsonNode, stringBuilder, leafResults, root.getData().getExpressionLeaves());
+            if(leafResults.size() == 1) {
+                return leafResults.get(0);
+            }
+            return resolveResult(leafResults, root.getData().getOperator());
         }
+    }
 
-        return false;
+    private void collectLeavesResult(JsonNode jsonNode, StringBuilder stringBuilder, List<Boolean> leafResults, List<ExpressionLeaf> expressionLeaves) {
+        for (ExpressionLeaf leaf : expressionLeaves) {
+            String jsonPointer = stringBuilder.append("/").append(leaf.getLhsExpression().replace(".", "/")).toString();
+            leafResults.add(determineTypeAndCompare(jsonNode.at(jsonPointer), leaf.getOperator(), leaf.getRhsExpression()));
+            stringBuilder.setLength(0);
+        }
     }
 
     private boolean resolveResult(List<Boolean> leafResults, ExpressionOperator operator) {
