@@ -7,6 +7,7 @@ import org.expressionevaluator.exceptions.ResourceNotFoundException;
 import org.expressionevaluator.mapper.ExpressionMapper;
 import org.expressionevaluator.repository.ExpressionRepository;
 import org.expressionevaluator.service.ExpressionEvaluatorService;
+import org.expressionevaluator.utility.ExpressionResolver;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,6 +16,8 @@ public class ExpressionEvaluatorServiceImpl implements ExpressionEvaluatorServic
 
     private final ExpressionRepository expressionRepository;
     private final ExpressionMapper expressionMapper;
+    private final ExpressionResolver expressionResolver;
+
     @Override
     public Long createExpression(ExpressionDTO expressionDTO) {
         Expression expressionFromDb = expressionMapper.toExpressionEntity(expressionDTO);
@@ -40,10 +43,18 @@ public class ExpressionEvaluatorServiceImpl implements ExpressionEvaluatorServic
         expressionRepository.save(expressionForUpdate);
     }
 
-
     @Override
     public void deleteExpression(Long expressionId) {
         expressionRepository.deleteById(expressionId);
+    }
+
+    @Override
+    public boolean evaluateExpression(Long expressionId, String data) {
+        Expression expressionFromDb = expressionRepository.findById(expressionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Expression", "id", expressionId));
+
+        ExpressionDTO expressionDTO = expressionMapper.toExpressionDTO(expressionFromDb);
+        return expressionResolver.getResult(expressionDTO, data);
     }
 
 

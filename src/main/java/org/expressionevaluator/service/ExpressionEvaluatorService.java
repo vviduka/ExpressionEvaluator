@@ -12,5 +12,7 @@ public interface ExpressionEvaluatorService {
 
     void deleteExpression(Long expressionId);
 
+    boolean evaluateExpression(Long expressionId, String data);
+
 
 }

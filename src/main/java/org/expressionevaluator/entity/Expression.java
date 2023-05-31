@@ -26,7 +26,4 @@ public class Expression {
     @Column(nullable = false)
     private String expression;
 
-    @Column
-    private List<String> conditions;
-
 }

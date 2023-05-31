@@ -2,6 +2,7 @@ package org.expressionevaluator.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.expressionevaluator.dto.APIResponse;
+import org.expressionevaluator.dto.EvaluateExpressionRequestDTO;
 import org.expressionevaluator.dto.ExpressionDTO;
 import org.expressionevaluator.dto.ExpressionRequestDTO;
 import org.expressionevaluator.mapper.ExpressionMapper;
@@ -47,6 +48,12 @@ public class ExpressionEvaluatorController {
     public ResponseEntity<APIResponse<Long>> deleteExpression(@PathVariable("expressionId") Long employeeId) {
         expressionEvaluatorService.deleteExpression(employeeId);
         return new ResponseEntity<>(getAPIResponse(employeeId), HttpStatus.OK);
+    }
+
+    @PostMapping("/evaluate")
+    public ResponseEntity<APIResponse<Boolean>> createExpression(@Valid @RequestBody EvaluateExpressionRequestDTO evaluateExpressionRequestDTO) {
+        Boolean result = expressionEvaluatorService.evaluateExpression(evaluateExpressionRequestDTO.getExpressionId(), evaluateExpressionRequestDTO.getJsonString());
+        return new ResponseEntity<>( getAPIResponse(result), HttpStatus.OK);
     }
 
     private <T> APIResponse<T> getAPIResponse(T result) {

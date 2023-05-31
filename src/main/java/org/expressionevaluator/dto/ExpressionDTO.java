@@ -1,17 +1,15 @@
 package org.expressionevaluator.dto;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.List;
+import org.expressionevaluator.utility.ExpressionNode;
+import org.expressionevaluator.utility.tree.TreeNode;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Builder
 public class ExpressionDTO {
     private Long id;
     private String name;
     private String expression;
-    private List<String> conditions;
+    private TreeNode<ExpressionNode> expressionTree;
 }
