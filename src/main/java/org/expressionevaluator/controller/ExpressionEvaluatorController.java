@@ -7,6 +7,7 @@ import org.expressionevaluator.dto.EvaluateExpressionRequestDTO;
 import org.expressionevaluator.dto.ExpressionDTO;
 import org.expressionevaluator.dto.ExpressionRequestDTO;
 import org.expressionevaluator.mapper.ExpressionMapper;
+import org.expressionevaluator.service.ExpressionEvaluatorService;
 import org.expressionevaluator.service.impl.ExpressionEvaluatorServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class ExpressionEvaluatorController {
 
     private final static String SUCCESS = "success";
 
-    private final ExpressionEvaluatorServiceImpl expressionEvaluatorService;
+    private final ExpressionEvaluatorService expressionEvaluatorService;
     private final ExpressionMapper expressionMapper;
 
     @PostMapping("/expression")
