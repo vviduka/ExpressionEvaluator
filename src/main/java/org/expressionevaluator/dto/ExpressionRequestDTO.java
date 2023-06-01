@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.expressionevaluator.validator.expression.ExpressionConstraint;
+import org.expressionevaluator.validation.expression.ExpressionConstraint;
 
 
 

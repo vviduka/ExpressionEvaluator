@@ -1,4 +1,4 @@
-package org.expressionevaluator.validator.json;
+package org.expressionevaluator.validation.json;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintValidator;

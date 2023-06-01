@@ -19,7 +19,7 @@ public class ExpressionResolverTest {
 
     @ParameterizedTest
     @MethodSource("expressionResolverArgumentProvider")
-    public void testGetResult(String jsonData, ExpressionDTO expressionDTO, boolean result) {
+    public void when_getResultIsProvidedWithCorrectInput_should_returnCorrectResult(String jsonData, ExpressionDTO expressionDTO, boolean result) {
         ObjectMapper objectMapper = new ObjectMapper();
         ExpressionResolver expressionResolver = new ExpressionResolver(objectMapper);
         assertEquals(result, expressionResolver.getResult(expressionDTO,jsonData));

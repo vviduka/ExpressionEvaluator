@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.expressionevaluator.validator.json.JsonConstraint;
+import org.expressionevaluator.validation.json.JsonConstraint;
 
 @Data
 @AllArgsConstructor

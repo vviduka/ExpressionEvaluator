@@ -9,6 +9,12 @@ import java.util.*;
 
 public class ExpressionTreeBuilder {
 
+
+    /**
+     * Utility method for constructing ExpressionTree providing with logically correct expression string
+     * @param expression - Expression string provided by user
+     * @return TreeNode<ExpressionNode> - root node of tree
+     */
     public static TreeNode<ExpressionNode> buildTree(String expression) {
         List<String> tokens = ExpressionTokenizer.tokenizeExpression(expression);
         Stack<TreeNode<ExpressionNode>> stack = new Stack<>();
@@ -22,7 +28,6 @@ public class ExpressionTreeBuilder {
     }
 
     //we want first to get OR or AND operator but if that doesnt exist in expression return any
-    //It plays a part in parsing simpleNodeConstructor
     public static ExpressionOperator findLogicalOperator(List<String> tokens) {
         return tokens.stream()
                 .filter(token -> token.equals(ExpressionOperator.AND.getSymbol()) || token.equals(ExpressionOperator.OR.getSymbol()))

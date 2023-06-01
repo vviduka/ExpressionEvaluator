@@ -17,13 +17,20 @@ import java.util.Stack;
 public class ExpressionResolver {
     private final ObjectMapper mapper;
 
+    /**
+     * Method for processing json input data with expression we provided.
+     * It returns result true or false which validate json input with logical statements and comparisons.
+     * @param expressionDTO - Provided by service based on ID we provided on API entry point
+     * @param jsonInput - JSON string input provided by user
+     * @return boolean - if expression statement is true or false
+     */
     public boolean getResult(ExpressionDTO expressionDTO, String jsonInput) {
         try {
             JsonNode jsonNode = mapper.readTree(jsonInput);
             Stack<TreeNode<ExpressionNode>> nodeStack = new Stack<>();
             TreeNode<ExpressionNode> node = expressionDTO.getExpressionTree();
             populateStack(nodeStack, node);
-            evaluateExpression(jsonNode, nodeStack);
+            populateNodesResult(jsonNode, nodeStack);
             return node.getData().getResult();
         } catch (Exception e) {
             e.printStackTrace();
@@ -31,13 +38,15 @@ public class ExpressionResolver {
         return false;
     }
 
-    private void evaluateExpression(JsonNode jsonNode, Stack<TreeNode<ExpressionNode>> nodeStack) {
+    /**
+     * Method populateNodeResult is used to iterate trough nodeStack and extract results from each node comparing
+     * each ExpressionLeaf and comparing it all together for final result
+     * @param jsonNode - JSON Data
+     * @param nodeStack - ExpressionNode stack
+     */
+    private void populateNodesResult(JsonNode jsonNode, Stack<TreeNode<ExpressionNode>> nodeStack) {
         StringBuilder stringBuilder = new StringBuilder();
         List<Boolean> leafResults = new ArrayList<>();
-        populateNodesResult(jsonNode, nodeStack, stringBuilder, leafResults);
-    }
-
-    private void populateNodesResult(JsonNode jsonNode, Stack<TreeNode<ExpressionNode>> nodeStack, StringBuilder stringBuilder, List<Boolean> leafResults) {
         while (!nodeStack.empty()) {
             TreeNode<ExpressionNode> node = nodeStack.pop();
             if (node.getData().getExpressionLeaves().isEmpty()) {
@@ -64,7 +73,7 @@ public class ExpressionResolver {
         }
     }
 
-    //Populate stack so we can use Recursive decent algorithm
+    //Populate stack so we can use Recursive it recursivly
     private void populateStack(Stack<TreeNode<ExpressionNode>> nodeStack, TreeNode<ExpressionNode> node) {
         TreeNodeIterator<ExpressionNode> treeNodeIterator = new TreeNodeIterator<>(node);
         while (treeNodeIterator.hasNext()) {

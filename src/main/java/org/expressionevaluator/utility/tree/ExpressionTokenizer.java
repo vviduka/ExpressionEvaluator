@@ -9,6 +9,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ExpressionTokenizer {
+
+    /**
+     * Method tokenizExpression converts any String expression in tokens
+     * Tokes are then used to construct simple or complelx tree stuctures
+     * @param expression - String expression provided by user
+     * @return List of String tokens
+     */
     public static List<String> tokenizeExpression(String expression) {
         String normalizedExpression = normalizeExpression(expression);
         List<String> tokens = new ArrayList<>();
@@ -41,6 +48,10 @@ public class ExpressionTokenizer {
         return tokens;
     }
 
+    private static String normalizeExpression(String expression) {
+        return expression.replaceAll("AND", "&&").replaceAll("OR", "||");
+    }
+
     private static void tokenizeSubExpression(String subExpression, List<String> tokens) {
         StringTokenizer tokenizer = new StringTokenizer(subExpression, "() ", true);
         while (tokenizer.hasMoreTokens()) {
@@ -49,10 +60,6 @@ public class ExpressionTokenizer {
                 tokens.add(token);
             }
         }
-    }
-
-    public static String normalizeExpression(String expression) {
-        return expression.replaceAll("AND", "&&").replaceAll("OR", "||");
     }
 
 }
