@@ -1,5 +1,6 @@
 package org.expressionevaluator.utility.tree;
 
+import org.expressionevaluator.exceptions.ParsingExpressionTreeException;
 import org.expressionevaluator.utility.ExpressionLeaf;
 import org.expressionevaluator.utility.ExpressionNode;
 import org.expressionevaluator.utility.ExpressionOperator;
@@ -8,42 +9,20 @@ import java.util.*;
 
 public class ExpressionTreeBuilder {
 
-    private static int index;
-    private static int depthLevel;
-
     public static TreeNode<ExpressionNode> buildTree(String expression) {
         List<String> tokens = ExpressionTokenizer.tokenizeExpression(expression);
         Stack<TreeNode<ExpressionNode>> stack = new Stack<>();
 
         ExpressionNode rootNode = new ExpressionNode();
-        rootNode.setExpression(ExpressionTokenizer.normalizeExpression(expression));
-        rootNode.setDepthLevel(0);
-
-        //This checks if there is children in this expression
-        if(!expression.contains("(")) {
-            return createSimpleTree(rootNode, tokens);
-        }
-
-        rootNode.setOperator(findRootOperator(tokens));
+        parseRootExpression(tokens, rootNode, expression.contains("("));
         TreeNode<ExpressionNode> root = new TreeNode<>(rootNode);
         stack.push(root);
-
-        index = 0;
-        depthLevel = 0;
-
         createChildren(tokens, stack);
-
         return root;
     }
 
-    private static TreeNode<ExpressionNode> createSimpleTree(ExpressionNode rootNode, List<String> tokens) {
-        rootNode.setOperator(findLogicalOperator(tokens));
-        rootNode.setExpressionLeaves(createExpressionLeaves(rootNode));
-        return new TreeNode<>(rootNode);
-    }
-
     //we want first to get OR or AND operator but if that doesnt exist in expression return any
-    //It plays a part in parsing simpleNodeConstructor where
+    //It plays a part in parsing simpleNodeConstructor
     public static ExpressionOperator findLogicalOperator(List<String> tokens) {
         return tokens.stream()
                 .filter(token -> token.equals(ExpressionOperator.AND.getSymbol()) || token.equals(ExpressionOperator.OR.getSymbol()))
@@ -53,13 +32,17 @@ public class ExpressionTreeBuilder {
                         .filter(ExpressionOperator::isLogicOperator)
                         .map(ExpressionOperator::findBySymbol)
                         .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("No operators found in the list of tokens.")));
+                        .orElseThrow(() -> new ParsingExpressionTreeException("No operators found in the list of tokens.")));
     }
 
     public static List<ExpressionLeaf> createExpressionLeaves(ExpressionNode expressionNode) {
+        if(expressionNode.getOperator() == null) {
+            throw new ParsingExpressionTreeException("Operator not found in current node:" + expressionNode);
+        }
+
         String expression = expressionNode.getExpression();
         if(expression == null) {
-            throw new IllegalArgumentException("Expression cannot be null!");
+            throw new ParsingExpressionTreeException("Expression cannot be null!");
         }
 
         List<ExpressionLeaf> expressionLeafList = new ArrayList<>();
@@ -83,55 +66,63 @@ public class ExpressionTreeBuilder {
         return expressionLeafList;
     }
 
-    private static ExpressionOperator findRootOperator(List<String> tokens) {
+    private static void parseRootExpression(List<String> tokens, ExpressionNode root, boolean isComplexTree) {
         int rootLevel = 0;
+        StringBuilder rootExpression = new StringBuilder();
+
+        if(!isComplexTree) {
+            root.setOperator(findLogicalOperator(tokens));
+        }
+
         for (String token : tokens) {
             if (token.equals("(")) {
                 rootLevel++;
             } else if (token.equals(")")) {
                 rootLevel--;
-            } else if (rootLevel == 0 && isLogicalOperator(token)) {
-                return ExpressionOperator.findBySymbol(token);
+            } else if (rootLevel == 0) {
+                if(isComplexTree && isLogicalOperator(token)) {
+                    root.setOperator(ExpressionOperator.findBySymbol(token));
+                }
+                rootExpression.append(token).append(" ");
             }
         }
-
-        throw new IllegalArgumentException("Operator not found!");
-
+        root.setExpression(rootExpression.toString().trim());
+        root.setExpressionLeaves(createExpressionLeaves(root));
     }
 
     private static void createChildren(List<String> tokens, Stack<TreeNode<ExpressionNode>> stack) {
-        while (index < tokens.size()) {
-            String token = tokens.get(index);
+        for(String token : tokens) {
             if (token.equals("(")) {
-                depthLevel++;
                 stack.push(createExpressionNodeChild(stack.peek()));
             } else if (token.equals(")")) {
-                trimExpressionAndAssignChildToParent(stack);
-            } else if (isLogicalOperator(token) && depthLevel != 0) {
+                saveExpressionAndAssignChildToParent(stack);
+            } else if (isLogicalOperator(token) && !stack.peek().isRoot()) {
                 setExpressionNodeOperator(stack, token);
-            } else {
+            } else if(!stack.peek().isRoot()){
                 stack.peek().getData().setExpression(stack.peek().getData().getExpression() + token + " ");
             }
-            index++;
         }
     }
 
-    private static void trimExpressionAndAssignChildToParent(Stack<TreeNode<ExpressionNode>> stack) {
-        TreeNode<ExpressionNode> node = stack.pop();
-        node.getData().setExpression(node.getData().getExpression().trim());
-        node.getData().setExpressionLeaves(createExpressionLeaves(node.getData()));
-        stack.peek().addChild(node);
+    private static void saveExpressionAndAssignChildToParent(Stack<TreeNode<ExpressionNode>> stack) {
+        try {
+            TreeNode<ExpressionNode> node = stack.pop();
+            node.getData().setExpression(node.getData().getExpression().trim());
+            node.getData().setExpressionLeaves(createExpressionLeaves(node.getData()));
+            stack.peek().addChild(node);
+        } catch(EmptyStackException e) {
+            throw new ParsingExpressionTreeException("There is no more items on stack!");
+        }
     }
 
     private static void setExpressionNodeOperator(Stack<TreeNode<ExpressionNode>> stack, String token) {
         ExpressionNode expressionNode = stack.peek().getData();
-        expressionNode.setExpression(stack.peek().getData().getExpression() + " " + token + " ");
+        expressionNode.setExpression(stack.peek().getData().getExpression() + token + " ");
         expressionNode.setOperator(ExpressionOperator.findBySymbol(token));
     }
 
     private static TreeNode<ExpressionNode> createExpressionNodeChild(TreeNode<ExpressionNode> parent) {
         ExpressionNode child = new ExpressionNode();
-        child.setDepthLevel(depthLevel);
         child.setExpression("");
         TreeNode<ExpressionNode> expressionTreeNode = new TreeNode<>(child);
         expressionTreeNode.setParent(parent);

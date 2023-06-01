@@ -54,4 +54,5 @@ public class ExpressionTokenizer {
     public static String normalizeExpression(String expression) {
         return expression.replaceAll("AND", "&&").replaceAll("OR", "||");
     }
+
 }

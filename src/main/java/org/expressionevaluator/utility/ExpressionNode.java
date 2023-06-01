@@ -8,7 +8,6 @@ import java.util.List;
 public class ExpressionNode {
     private String expression;
     private ExpressionOperator operator;
-    private Integer depthLevel;
     private Boolean result;
     private List<ExpressionLeaf> expressionLeaves;
 

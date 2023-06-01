@@ -2,12 +2,13 @@ package org.expressionevaluator.utility;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Value;
 
-@Data
+@Value
 @AllArgsConstructor
 public class ExpressionLeaf {
-    private String lhsExpression;
-    private String rhsExpression;
-    private ExpressionOperator operator;
-    private Boolean result;
+    String lhsExpression;
+    String rhsExpression;
+    ExpressionOperator operator;
+    Boolean result;
 }

@@ -1,5 +1,7 @@
 package org.expressionevaluator.utility;
 
+import org.expressionevaluator.exceptions.ParsingExpressionTreeException;
+
 public enum ExpressionOperator {
     GREATER_THAN(1, ">",  ">"),
     GREATER_OR_EQUALS_THAN(2, ">=", ">="),
@@ -21,7 +23,7 @@ public enum ExpressionOperator {
             case "!=" -> ExpressionOperator.NOT_EQUALS;
             case "&&" -> ExpressionOperator.AND;
             case "||" -> ExpressionOperator.OR;
-            default -> throw new IllegalArgumentException("Expression operator not found: " + symbol);
+            default -> throw new ParsingExpressionTreeException("Expression operator not found: " + symbol);
         };
 
     }

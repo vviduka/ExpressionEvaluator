@@ -8,18 +8,17 @@ public class TreeNodeIterator<T> implements Iterator<TreeNode<T>> {
         ProcessParent, ProcessChildCurNode, ProcessChildSubNode
     }
 
-    private TreeNode<T> treeNode;
+    private final TreeNode<T> treeNode;
+    private ProcessStages doNext;
+    private TreeNode<T> next;
+    private final Iterator<TreeNode<T>> childrenCurNodeIter;
+    private Iterator<TreeNode<T>> childrenSubNodeIter;
 
     public TreeNodeIterator(TreeNode<T> treeNode) {
         this.treeNode = treeNode;
         this.doNext = ProcessStages.ProcessParent;
         this.childrenCurNodeIter = treeNode.children.iterator();
     }
-
-    private ProcessStages doNext;
-    private TreeNode<T> next;
-    private Iterator<TreeNode<T>> childrenCurNodeIter;
-    private Iterator<TreeNode<T>> childrenSubNodeIter;
 
     @Override
     public boolean hasNext() {

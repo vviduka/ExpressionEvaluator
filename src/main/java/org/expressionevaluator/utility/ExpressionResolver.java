@@ -23,32 +23,22 @@ public class ExpressionResolver {
             Stack<TreeNode<ExpressionNode>> nodeStack = new Stack<>();
             TreeNode<ExpressionNode> node = expressionDTO.getExpressionTree();
             populateStack(nodeStack, node);
-            return evaluateExpression(jsonNode, nodeStack);
+            evaluateExpression(jsonNode, nodeStack);
+            return node.getData().getResult();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    private boolean evaluateExpression(JsonNode jsonNode, Stack<TreeNode<ExpressionNode>> nodeStack) {
+    private void evaluateExpression(JsonNode jsonNode, Stack<TreeNode<ExpressionNode>> nodeStack) {
         StringBuilder stringBuilder = new StringBuilder();
         List<Boolean> leafResults = new ArrayList<>();
         populateNodesResult(jsonNode, nodeStack, stringBuilder, leafResults);
-        TreeNode<ExpressionNode> root = nodeStack.peek();
-        if (root.getChildren() != null && !root.getChildren().isEmpty()) {
-            return resolveResult(extractChildrenNodeResults(root), root.getData().getOperator());
-        } else {
-            // Simple expression tree
-            collectLeavesResult(jsonNode, stringBuilder, leafResults, root.getData().getExpressionLeaves());
-            if (leafResults.size() == 1) {
-                return leafResults.get(0);
-            }
-            return resolveResult(leafResults, root.getData().getOperator());
-        }
     }
 
     private void populateNodesResult(JsonNode jsonNode, Stack<TreeNode<ExpressionNode>> nodeStack, StringBuilder stringBuilder, List<Boolean> leafResults) {
-        while (!nodeStack.empty() && !nodeStack.peek().isRoot()) {
+        while (!nodeStack.empty()) {
             TreeNode<ExpressionNode> node = nodeStack.pop();
             if (node.getData().getExpressionLeaves().isEmpty()) {
                 //Nodes which consist of 2 nested expressions
@@ -58,8 +48,15 @@ public class ExpressionResolver {
                 collectLeavesResult(jsonNode, stringBuilder, leafResults, node.getData().getExpressionLeaves());
             }
             if (leafResults.size() == 1) {
-                //For simple tree expression where we dont have nested nodes
-                leafResults.add(node.getChildren().get(0).getData().getResult());
+                if(node.getChildren().size() > 0){
+                    //for children nodes that contains another node
+                    leafResults.add(node.getChildren().get(0).getData().getResult());
+                } else {
+                    //for simple tree where we dont have any nodes
+                    node.getData().setResult(leafResults.get(0));
+                    leafResults.clear();
+                    continue;
+                }
             }
             // Set result for current node
             node.getData().setResult(resolveResult(leafResults, node.getData().getOperator()));
